@@ -9,8 +9,10 @@ void start_screen();
 void create_board();
 void start_game();
 void update_board();
-void valid_plays();
-bool black_turn,white_turn;
+void play_turn();
+void valid_plays(string move);
+void turn_pieces(string start,string end,string type,string turn);
+bool black_turn;
 
 vector<string> valid_moves;
 
@@ -71,9 +73,9 @@ void start_game()
         }
 
     black_turn = true;
-    white_turn = false;
     update_board();
-    valid_plays();
+    valid_plays("");
+    play_turn();
 }
 
 void update_board()
@@ -187,108 +189,317 @@ void update_board()
     }
 }
 
-void valid_plays()
+void valid_plays(string move)
 {
+    valid_moves.clear();
     int count;
+    string turn,outturn;
+     
     if(black_turn)
     {
-        for(int i = 0;i < 8;i++)
-            for(int j = 0;j < 8;j++)
+        turn = "\u26AB";
+        outturn = "\u26AA";
+    }
+    else
+    {
+        turn = "\u26AA";
+        outturn = "\u26AB";
+    }
+
+    for(int i = 0;i < 8;i++)
+        for(int j = 0;j < 8;j++)
+        {
+            if(positions[i][j] == turn)
             {
-                //black
-                if(positions[i][j] == "\u26AB")
+                //left
+                if(j - 1 >= 0)
                 {
-                    //left
-                    if(j - 1 >= 0)
+                    if(positions[i][j-1] == outturn)
                     {
-                        if(positions[i][j-1] == "\u26AA")
+                        count = 2;
+                        while(j-count >= 0)
                         {
-                            count = 2;
-                            while(j-count >= 0)
+                            if(positions[i][j-count] == " ")
                             {
-                                if(positions[i][j-count] == " ")
+                                valid_moves.push_back(string(1, char('a' + j - count)) + to_string(i+count-1));
+                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
                                 {
-                                    valid_moves.push_back(string(1, char('a' + j - count)) + to_string(i+count-1));
-                                    break;
+                                    turn_pieces(to_string(i)+to_string(j),to_string(i)+to_string(j-count),"left",turn);
                                 }
-                                else if(positions[i][j-count] == "\u26AB")
-                                {
-                                    break;
-                                }
-                                count++;
+                                break;
                             }
+                            else if(positions[i][j-count] == turn)
+                            {
+                                break;
+                            }
+                            count++;
                         }
                     }
-                    //right
-                    if(j+1 <= 7)
+                }
+                //right
+                if(j+1 <= 7)
+                {
+                    if(positions[i][j+1] == outturn)
                     {
-                        if(positions[i][j+1] == "\u26AA")
+                        count = 2;
+                        while(j+count <= 7)
                         {
-                            count = 2;
-                            while(j+count <= 7)
+                            if(positions[i][j+count] == " ")
                             {
-                                if(positions[i][j+count] == " ")
+                                valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+count-1));
+                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
                                 {
-                                    valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+count-1));
-                                    break;
+                                    turn_pieces(to_string(i)+to_string(j),to_string(i)+to_string(j+count),"right",turn);
                                 }
-                                else if(positions[i][j-count] == "\u26AB")
-                                {
-                                    break;
-                                }
-                                count++;
+                                break;
                             }
+                            else if(positions[i][j-count] == turn)
+                            {
+                                break;
+                            }
+                            count++;
                         }
                     }
-                    //up
-                    if(i-1 >= 0)
+                }
+                //up
+                if(i-1 >= 0)
+                {
+                    if(positions[i-1][j] == outturn)
                     {
-                        if(positions[i-1][j] == "\u26AA")
+                        count = 2;
+                        while(i-count >= 0)
                         {
-                            count = 2;
-                            while(i-count >= 0)
+                            if(positions[i-count][j] == " ")
                             {
-                                if(positions[i-count][j] == " ")
+                                valid_moves.push_back(string(1,char('a' + j)) + to_string(i-count+1));
+                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
                                 {
-                                    valid_moves.push_back(string(1,char('a' + j)) + to_string(i-count+1));
-                                    break;
+                                    turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j),"up",turn);
                                 }
-                                else if(positions[i-count][j] == "\u26AB")
-                                {
-                                    break;
-                                }
-                                count++;
+                                break;
                             }
+                            else if(positions[i-count][j] == turn)
+                            {
+                                break;
+                            }
+                            count++;
                         }
                     }
-                    //down
+                }
+                //down
+                if(i+1 <= 7)
+                {
                     if(i+1 <= 7)
                     {
-                        if(i+1 <= 7)
+                        if(positions[i+1][j] == outturn)
                         {
-                            if(positions[i+1][j] == "\u26AA")
+                            count = 2;
+                            while(i+count >= 0)
                             {
-                                count = 2;
-                                while(i+count >= 0)
+                                if(positions[i+count][j] == " ")
                                 {
-                                    if(positions[i+count][j] == " ")
+                                    valid_moves.push_back(string(1,char('a' + j)) + to_string(i+count+1));
+                                    if(move != "" && valid_moves[valid_moves.size()-1] == move)
                                     {
-                                        valid_moves.push_back(string(1,char('a' + j)) + to_string(i+count+1));
-                                        break;
+                                        turn_pieces(to_string(i)+to_string(j),to_string(i+count)+to_string(j),"down",turn);
                                     }
-                                    else if(positions[i+count][j] == "\u26AB")
-                                    {
-                                        break;
-                                    }
-                                    count++;
+                                    break;
                                 }
+                                else if(positions[i+count][j] == turn)
+                                {
+                                    break;
+                                }
+                                count++;
                             }
                         }
                     }
                 }
+                //diameter
+                if(i-1 >= 0 && j+1 <= 7)
+                {
+                    if(positions[i-1][j+1] == outturn)
+                    {
+                        count = 2;
+                        while(i-count >= 0 && j+count <= 7)
+                        {
+                            if(positions[i-count][j+count] == " ")
+                            {
+                                valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i-count+1));
+                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                {
+                                    turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j+count),"diamup_right",turn);
+                                }
+                                break;
+                            }
+                            else if(positions[i-count][j+count] == turn)
+                            {
+                                break;
+                            }
+                            count++;
+                        }
+                    }
+                }
+                if(i-1 >= 0 && j-1 >= 0)
+                {
+                    if(positions[i-1][j-1] == outturn)
+                    {
+                        count = 2;
+                        while(i-count >= 0 && j-count >= 0)
+                        {
+                            if(positions[i-count][j-count] == " ")
+                            {
+                                valid_moves.push_back(string(1,char('a' + j - count)) + to_string(i-count+1));
+                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                {
+                                    turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j-count),"diamup_left",turn);
+                                }
+                                break;
+                            }
+                            else if(positions[i-count][j-count] == turn)
+                            {
+                                break;
+                            }
+                            count++;
+                        }
+                    }
+                }
+                if(i+1 <= 7 && j+1 <= 7)
+                {
+                    if(positions[i+1][j+1] == outturn)
+                    {
+                        count = 2;
+                        while(i+count <= 7 && j+count <= 7)
+                        {
+                            if(positions[i+count][j+count] == " ")
+                            {
+                                valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+count+1));
+                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                {
+                                    turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j+count),"diamdown_right",turn);
+                                }
+                                break;
+                            }
+                            else if(positions[i+count][j+count] == turn)
+                            {
+                                break;
+                            }
+                            count++;
+                        }
+                    }
+                }
+                if(i+1 <= 7 && j-1 >= 0)
+                {
+                    if(positions[i+1][j-1] == outturn)
+                    {
+                        count = 2;
+                        while(i+count <= 7 && j-count >= 0)
+                        {
+                            if(positions[i+count][j-count] == " ")
+                            {
+                                valid_moves.push_back(string(1,char('a' + j - count)) + to_string(i+count+1));
+                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                {
+                                    turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j+count),"diamdown_left",turn);
+                                }
+                                break;
+                            }
+                            else if(positions[i+count][j-count] == turn)
+                            {
+                                break;
+                            }
+                            count++;
+                        }
+                    }
+                }
             }
-    }
+        }
 
     for(int i = 0;i < valid_moves.size();i++)
-        cout << valid_moves[i];
+        cout << valid_moves[i] << " -- ";
+}
+
+void turn_pieces(string start,string end,string type,string turn)
+{
+    if(type == "up")
+    {
+        for(int i = (start[0] - '0')-1;i > end[0] - '0';i--)
+        {
+            positions[i][start[1]-'0'] = turn;
+        }
+    }
+    else if(type == "down")
+    {
+        for(int i = (start[0] - '0')+1;i < end[0] - '0';i++)
+        {
+            positions[i][start[1]-'0'] = turn;
+        }
+    }
+    else if(type == "right")
+    {
+        for(int i = (start[1] - '0')+1;i < end[1] - '0';i++)
+        {
+            positions[start[0]-'0'][i] = turn;
+        }
+    }
+    else if(type == "left")
+    {
+        for(int i = (start[1] - '0')-1;i > end[1] - '0';i--)
+        {
+            positions[start[0]-'0'][i] = turn;
+        }
+    }
+    else if(type == "diamup_right")
+    {
+        for(int i = (start[0] - '0')-1,j = (char(start[1])-'0')+1;i > end[0] - '0';i--)
+        {
+            positions[i][j++] = turn;
+        }
+    }
+    else if(type == "diamup_left")
+    {
+        for(int i = (start[0] - '0')-1,j = (char(start[1])-'0')-1;i > end[0] - '0';i--)
+        {
+            positions[i][j--] = turn;
+        }
+    }
+    else if(type == "diamdown_right")
+    {
+        for(int i = (start[0] - '0')+1,j = (char(start[1])-'0')+1;i < end[0] - '0';i++)
+        {
+            positions[i][j++] = turn;
+        }
+    }
+    else if(type == "diamdown_left")
+    {
+        for(int i = (start[0] - '0')+1,j = (char(start[1])-'0')-1;i < end[0] - '0';i++)
+        {
+            positions[i][j--] = turn;
+        }
+    }
+}
+
+void play_turn()
+{
+    while(valid_moves.size() > 0)
+    {
+        valid_plays("");
+        string move;
+        if(black_turn)
+        {
+            cout << "black moves: ";
+            cin >> move;
+            valid_plays(move);
+            positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AB";
+            black_turn = false;
+        }
+        else
+        {
+            cout << "white moves: ";
+            cin >> move;
+            valid_plays(move);
+            positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AA";
+            black_turn = true;
+        }
+        update_board();
+    }
 }
