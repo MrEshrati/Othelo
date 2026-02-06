@@ -12,6 +12,7 @@ void update_board();
 void play_turn();
 void valid_plays(string move);
 void turn_pieces(string start,string end,string type,string turn);
+void result();
 bool black_turn;
 
 vector<string> valid_moves;
@@ -221,7 +222,7 @@ void valid_plays(string move)
                         {
                             if(positions[i][j-count] == " ")
                             {
-                                valid_moves.push_back(string(1, char('a' + j - count)) + to_string(i+count-1));
+                                valid_moves.push_back(string(1, char('a' + j - count)) + to_string(i+1));
                                 if(move != "" && valid_moves[valid_moves.size()-1] == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i)+to_string(j-count),"left",turn);
@@ -246,14 +247,14 @@ void valid_plays(string move)
                         {
                             if(positions[i][j+count] == " ")
                             {
-                                valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+count-1));
+                                valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+1));
                                 if(move != "" && valid_moves[valid_moves.size()-1] == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i)+to_string(j+count),"right",turn);
                                 }
                                 break;
                             }
-                            else if(positions[i][j-count] == turn)
+                            else if(positions[i][j+count] == turn)
                             {
                                 break;
                             }
@@ -294,7 +295,7 @@ void valid_plays(string move)
                         if(positions[i+1][j] == outturn)
                         {
                             count = 2;
-                            while(i+count >= 0)
+                            while(i+count <= 7)
                             {
                                 if(positions[i+count][j] == " ")
                                 {
@@ -375,7 +376,7 @@ void valid_plays(string move)
                                 valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+count+1));
                                 if(move != "" && valid_moves[valid_moves.size()-1] == move)
                                 {
-                                    turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j+count),"diamdown_right",turn);
+                                    turn_pieces(to_string(i)+to_string(j),to_string(i+count)+to_string(j+count),"diamdown_right",turn);
                                 }
                                 break;
                             }
@@ -399,7 +400,7 @@ void valid_plays(string move)
                                 valid_moves.push_back(string(1,char('a' + j - count)) + to_string(i+count+1));
                                 if(move != "" && valid_moves[valid_moves.size()-1] == move)
                                 {
-                                    turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j+count),"diamdown_left",turn);
+                                    turn_pieces(to_string(i)+to_string(j),to_string(i+count)+to_string(j-count),"diamdown_left",turn);
                                 }
                                 break;
                             }
@@ -480,26 +481,92 @@ void turn_pieces(string start,string end,string type,string turn)
 
 void play_turn()
 {
-    while(valid_moves.size() > 0)
+    bool GameOver=false,valid,black_out=false,white_out=false;
+    while(!GameOver)
     {
+        valid = false;
         valid_plays("");
         string move;
-        if(black_turn)
+        if(black_turn && !black_out)
         {
             cout << "black moves: ";
-            cin >> move;
-            valid_plays(move);
-            positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AB";
+            if(valid_moves.size() != 0)
+            {
+                while(!valid)
+                {
+                    cin >> move;
+                    for(int i = 0;i < valid_moves.size();i++)
+                    {
+                        if(move == valid_moves[i])
+                        {
+                            valid = true;
+                            valid_plays(move);
+                            positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AB";
+                        }
+                    }
+                }
+            }
+            else
+            {
+                black_out = true;
+                cout << "Out Of Moves!\n";
+            }
             black_turn = false;
         }
         else
         {
             cout << "white moves: ";
-            cin >> move;
-            valid_plays(move);
-            positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AA";
+            if(valid_moves.size() != 0)
+            {
+                while(!valid)
+                {
+                    cin >> move;
+                    for(int i = 0;i < valid_moves.size();i++)
+                    {
+                        if(move == valid_moves[i])
+                        {
+                            valid = true;
+                            valid_plays(move);
+                            positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AA";
+                        }
+                    }
+                }
+            }
+            else
+            {
+                white_out = true;
+                cout << "Out Of Moves!\n";
+            }
+
             black_turn = true;
         }
         update_board();
+
+        if(black_out && white_out)
+            GameOver = true;
+    }
+
+    result();
+}
+
+void result()
+{
+    int white = 0,black = 0;
+    for(int i = 0;i < 8;i++)
+        for(int j = 0;j < 8;j++)
+        {
+            if(positions[i][j] == "\u26AB")
+                black++;
+            else
+                white++;
+        }
+
+    if(white > black)
+    {
+        cout << "White Wins!";
+    }
+    else
+    {
+        cout << "Black Wins!";
     }
 }
