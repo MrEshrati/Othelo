@@ -3,6 +3,8 @@
 #include <conio.h>
 #include <string>
 #include <vector>
+#include <random>
+#include <fstream>
 using namespace std;
 
 void start_screen();
@@ -13,7 +15,12 @@ void play_turn();
 void valid_plays(string move);
 void turn_pieces(string start,string end,string type,string turn);
 void result();
-bool black_turn;
+int randomInt(int N);
+void show_valid_moves();
+void save_game();
+void load_game();
+int data();
+bool black_turn,computer=false,save;
 
 vector<string> valid_moves;
 
@@ -38,13 +45,50 @@ int main()
             break;
         }
         else if(c == '1')
+        {
+            if(data())
+                load_game();
+
+            cout << data();
+        }
+        else if(c == '2')
+        {
+            if(computer)
+                computer = false;
+            else
+                computer = true;
+
+            system("cls");
+            start_screen();
+        }
+        else if(c == '3')
+        {
+            if(save)
+                save = false;
+            else
+                save = true;
+
+            system("cls");
+            start_screen();
+        }
+        else if(c == '4')
             return 0;
+
     }
     return 0;
 }
 
 void start_screen()
 {
+    string mode,save_game;
+    if(save)
+        save_game = "Enabled";
+    else
+        save_game = "Disabled";
+    if(computer)
+        mode = "1 vs Computer";
+    else
+        mode = "1 vs 1";
     for(int i = 0;i < 3;i++)
     {
         if (i == 0)
@@ -54,9 +98,20 @@ void start_screen()
         else
         {
             cout << "\u2502     [0]: PLAY     \u2502\n";
-            cout << "\u2502     [1]: EXIT     \u2502\n";
+            cout << "\u2502  [1]: Load Game   \u2502\n";
+            cout << "\u2502  [2]: Change Mode \u2502\n";
+            cout << "\u2502  [3]: Save Game   \u2502\n";
+            cout << "\u2502     [4]: EXIT     \u2502\n";
         }
     }
+
+    cout << "Mode: " << mode << "\n";
+    cout << "Save Game: " << save_game << "\n";
+
+    if(data())
+        cout << "A previously saved game can be loaded!";
+    else
+        cout << "There isn't any saved game to load!";
 }
 
 void start_game()
@@ -414,9 +469,6 @@ void valid_plays(string move)
                 }
             }
         }
-
-    for(int i = 0;i < valid_moves.size();i++)
-        cout << valid_moves[i] << " -- ";
 }
 
 void turn_pieces(string start,string end,string type,string turn)
@@ -486,6 +538,7 @@ void play_turn()
     {
         valid = false;
         valid_plays("");
+        show_valid_moves();
         string move;
         if(black_turn && !black_out)
         {
@@ -518,34 +571,56 @@ void play_turn()
         }
         else
         {
-            cout << "white moves: ";
-            if(valid_moves.size() != 0)
+            if(computer)
             {
-                while(!valid)
+                cout << "Computer moves: ";
+                if(valid_moves.size() != 0)
                 {
-                    cin >> move;
-                    for(int i = 0;i < valid_moves.size();i++)
-                    {
-                        if(move == valid_moves[i])
-                        {
-                            valid = true;
-                            valid_plays(move);
-                            positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AA";
-                            system("cls");
-                        }
-                    }
-                    if(!valid)
-                        cout << "Not a valid move!\nwhite moves: ";
+                    move = valid_moves[randomInt(valid_moves.size())];
+                    valid_plays(move);
+                    positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AA";
+                    cout << move;
+                }
+                else
+                {
+                    white_out = true;
+                    cout << "Out Of Moves!\n";
                 }
             }
             else
             {
-                white_out = true;
-                cout << "Out Of Moves!\n";
-            }
+                cout << "white moves: ";
+                if(valid_moves.size() != 0)
+                {
+                    while(!valid)
+                    {
+                        cin >> move;
+                        for(int i = 0;i < valid_moves.size();i++)
+                        {
+                            if(move == valid_moves[i])
+                            {
+                                valid = true;
+                                valid_plays(move);
+                                positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AA";
+                                system("cls");
+                            }
+                        }
+                        if(!valid)
+                            cout << "Not a valid move!\nwhite moves: ";
+                    }
+                }
+                else
+                {
+                    white_out = true;
+                    cout << "Out Of Moves!\n";
+                }
 
+            }
+            
             black_turn = true;
         }
+        if(save)
+            save_game();
         update_board();
 
         if(black_out && white_out)
@@ -575,4 +650,62 @@ void result()
     {
         cout << "Black Wins!";
     }
+}
+
+int randomInt(int N) {
+    static mt19937 gen(random_device{}());
+    uniform_int_distribution<int> dist(0, N-1);
+    return dist(gen);
+}
+
+void show_valid_moves()
+{
+    cout << "Valid Moves: ";
+    for(int i = 0;i < valid_moves.size();i++)
+    {
+        cout << valid_moves[i];
+        if(i == valid_moves.size()-1)
+            break;
+        cout << " -- ";
+    }
+    cout << "\n";
+}
+
+void save_game()
+{
+    ofstream out("save.txt");
+    
+    for(int i = 0;i < 8;i++)
+        for(int j = 0;j < 8;j++)
+            out << positions[i][j] << '\n';
+
+    out << black_turn << '\n';
+    out << computer << '\n';
+}
+
+void load_game()
+{
+    ifstream in("save.txt");
+
+    for (int i = 0; i < 8; i++)
+        for (int j = 0; j < 8; j++)
+            getline(in, positions[i][j]);
+
+    in >> black_turn;
+    in >> computer;
+
+    save = true;
+
+    update_board();
+    play_turn();
+}
+
+int data()
+{
+    ifstream in("save.txt");
+
+    if(in.good() && in.peek() != ifstream::traits_type::eof())
+        return 1;
+    else
+        return 0;
 }
