@@ -502,8 +502,11 @@ void play_turn()
                             valid = true;
                             valid_plays(move);
                             positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AB";
+                            system("cls");
                         }
                     }
+                    if(!valid)
+                        cout << "Not a valid move!\nblack moves: ";
                 }
             }
             else
@@ -528,8 +531,11 @@ void play_turn()
                             valid = true;
                             valid_plays(move);
                             positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AA";
+                            system("cls");
                         }
                     }
+                    if(!valid)
+                        cout << "Not a valid move!\nwhite moves: ";
                 }
             }
             else
