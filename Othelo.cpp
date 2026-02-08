@@ -19,10 +19,18 @@ int randomInt(int N);
 void show_valid_moves();
 void save_game();
 void load_game();
+void save_scoreboard();
+void load_scoreboard();
 int data();
 bool black_turn,computer=false,save;
 
+struct row {
+    string winner_name;
+    int win_count;
+};
+
 vector<string> valid_moves;
+vector<row> winners;
 
 // a 2D Array containing the status of the board's blocks  
 string positions[8][8];
@@ -34,6 +42,7 @@ int main()
     // sets console's output encoding to UTF8 so the unicode chars encode correctly.
     SetConsoleOutputCP(CP_UTF8);
 
+    load_scoreboard();
     start_screen();
 
     while(true)
@@ -42,14 +51,16 @@ int main()
         if(c == '0')
         {
             start_game();
-            break;
+            system("cls");
+            start_screen();
         }
         else if(c == '1')
         {
             if(data())
                 load_game();
 
-            cout << data();
+            system("cls");
+            start_screen();
         }
         else if(c == '2')
         {
@@ -72,7 +83,7 @@ int main()
             start_screen();
         }
         else if(c == '4')
-            return 0;
+            break;
 
     }
     return 0;
@@ -109,9 +120,21 @@ void start_screen()
     cout << "Save Game: " << save_game << "\n";
 
     if(data())
-        cout << "A previously saved game can be loaded!";
+        cout << "A previously saved game can be loaded!\n";
     else
-        cout << "There isn't any saved game to load!";
+        cout << "There isn't any saved game to load!\n";
+
+    for(int i = 0;i < winners.size()+2;i++)
+    {
+        if (i == 0)
+            cout << "\u250C\u2500\u2500\u2500\u2500\u2500\u2500Score Board\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n";
+        else if(i == winners.size()+1)
+            cout << "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n";
+        else
+        {
+            cout << "\u2502    "<< winners[i-1].winner_name << " " << winners[i-1].win_count << "    \u2502\n";
+        }
+    }
 }
 
 void start_game()
@@ -641,15 +664,35 @@ void result()
             else
                 white++;
         }
-
+    string winner;
     if(white > black)
     {
-        cout << "White Wins!";
+        cout << "White Wins!\nPlease Enter Winner's Name: ";
+        if(computer)
+            winner = "Computer";
+        else
+            cin >> winner;
     }
     else
     {
-        cout << "Black Wins!";
+        cout << "Black Wins!\nPlease Enter Winner's Name: ";
+        cin >> winner;
     }
+
+    for(int i = 0;i < winners.size();i++)
+    {
+        if(winner == winners[i].winner_name)
+        {
+            winners[i].win_count++;
+            return ;
+        }
+    }
+    row winner_data;
+    winner_data.winner_name = winner;
+    winner_data.win_count = 1;
+    winners.push_back(winner_data);
+
+    save_scoreboard();
 }
 
 int randomInt(int N) {
@@ -687,8 +730,8 @@ void load_game()
 {
     ifstream in("save.txt");
 
-    for (int i = 0; i < 8; i++)
-        for (int j = 0; j < 8; j++)
+    for(int i = 0; i < 8; i++)
+        for(int j = 0; j < 8; j++)
             getline(in, positions[i][j]);
 
     in >> black_turn;
@@ -698,6 +741,7 @@ void load_game()
 
     update_board();
     play_turn();
+    main();
 }
 
 int data()
@@ -708,4 +752,29 @@ int data()
         return 1;
     else
         return 0;
+}
+
+void save_scoreboard()
+{
+    ofstream out("score.txt");
+
+    out << winners.size() << '\n';
+    for(int i = 0;i < winners.size();i++)
+    {
+        out << winners[i].winner_name << '\n';
+        out << winners[i].win_count << '\n';
+    }
+}
+
+void load_scoreboard()
+{
+    ifstream in("score.txt");
+
+    int size;
+    in >> size;
+    for(int i = 0;i < winners.size();i++)
+    {
+        getline(in,winners[i].winner_name);
+        in >> winners[i].win_count;
+    }
 }
