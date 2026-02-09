@@ -21,6 +21,7 @@ void save_game();
 void load_game();
 void save_scoreboard();
 void load_scoreboard();
+int check_duplicate(string move);
 int data();
 bool black_turn,computer=false,save;
 
@@ -300,8 +301,9 @@ void valid_plays(string move)
                         {
                             if(positions[i][j-count] == " ")
                             {
-                                valid_moves.push_back(string(1, char('a' + j - count)) + to_string(i+1));
-                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                if(!check_duplicate(move))
+                                    valid_moves.push_back(string(1, char('a' + j - count)) + to_string(i+1));
+                                if(move != "" && string(1, char('a' + j - count)) + to_string(i+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i)+to_string(j-count),"left",turn);
                                 }
@@ -325,8 +327,9 @@ void valid_plays(string move)
                         {
                             if(positions[i][j+count] == " ")
                             {
-                                valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+1));
-                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                if(!check_duplicate(move))
+                                    valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+1));
+                                if(move != "" && string(1,char('a' + j + count)) + to_string(i+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i)+to_string(j+count),"right",turn);
                                 }
@@ -350,8 +353,9 @@ void valid_plays(string move)
                         {
                             if(positions[i-count][j] == " ")
                             {
-                                valid_moves.push_back(string(1,char('a' + j)) + to_string(i-count+1));
-                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                if(!check_duplicate(move))
+                                    valid_moves.push_back(string(1,char('a' + j)) + to_string(i-count+1));
+                                if(move != "" && string(1,char('a' + j)) + to_string(i-count+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j),"up",turn);
                                 }
@@ -377,8 +381,9 @@ void valid_plays(string move)
                             {
                                 if(positions[i+count][j] == " ")
                                 {
-                                    valid_moves.push_back(string(1,char('a' + j)) + to_string(i+count+1));
-                                    if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                    if(!check_duplicate(move))
+                                        valid_moves.push_back(string(1,char('a' + j)) + to_string(i+count+1));
+                                    if(move != "" && string(1,char('a' + j)) + to_string(i+count+1) == move)
                                     {
                                         turn_pieces(to_string(i)+to_string(j),to_string(i+count)+to_string(j),"down",turn);
                                     }
@@ -403,8 +408,9 @@ void valid_plays(string move)
                         {
                             if(positions[i-count][j+count] == " ")
                             {
-                                valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i-count+1));
-                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                if(!check_duplicate(move))
+                                    valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i-count+1));
+                                if(move != "" && string(1,char('a' + j + count)) + to_string(i-count+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j+count),"diamup_right",turn);
                                 }
@@ -427,8 +433,9 @@ void valid_plays(string move)
                         {
                             if(positions[i-count][j-count] == " ")
                             {
-                                valid_moves.push_back(string(1,char('a' + j - count)) + to_string(i-count+1));
-                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                if(!check_duplicate(move))
+                                    valid_moves.push_back(string(1,char('a' + j - count)) + to_string(i-count+1));
+                                if(move != "" && string(1,char('a' + j - count)) + to_string(i-count+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j-count),"diamup_left",turn);
                                 }
@@ -451,8 +458,9 @@ void valid_plays(string move)
                         {
                             if(positions[i+count][j+count] == " ")
                             {
-                                valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+count+1));
-                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                if(!check_duplicate(move))
+                                    valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+count+1));
+                                if(move != "" && string(1,char('a' + j + count)) + to_string(i+count+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i+count)+to_string(j+count),"diamdown_right",turn);
                                 }
@@ -475,8 +483,9 @@ void valid_plays(string move)
                         {
                             if(positions[i+count][j-count] == " ")
                             {
-                                valid_moves.push_back(string(1,char('a' + j - count)) + to_string(i+count+1));
-                                if(move != "" && valid_moves[valid_moves.size()-1] == move)
+                                if(!check_duplicate(move))
+                                    valid_moves.push_back(string(1,char('a' + j - count)) + to_string(i+count+1));
+                                if(move != "" && string(1,char('a' + j - count)) + to_string(i+count+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i+count)+to_string(j-count),"diamdown_left",turn);
                                 }
@@ -741,7 +750,6 @@ void load_game()
 
     update_board();
     play_turn();
-    main();
 }
 
 int data()
@@ -777,4 +785,14 @@ void load_scoreboard()
         getline(in,winners[i].winner_name);
         in >> winners[i].win_count;
     }
+}
+
+int check_duplicate(string move)
+{
+    for(int i = 0;i < valid_moves.size();i++)
+    {
+        if(move == valid_moves[i])
+            return 1;
+    }
+    return 0;
 }
