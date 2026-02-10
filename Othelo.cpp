@@ -5,6 +5,8 @@
 #include <vector>
 #include <random>
 #include <fstream>
+#include <thread>
+#include <chrono>
 using namespace std;
 
 void start_screen();
@@ -17,13 +19,15 @@ void turn_pieces(string start,string end,string type,string turn);
 void result();
 int randomInt(int N);
 void show_valid_moves();
-void save_game();
+void save_game(int mode);
 void load_game();
 void save_scoreboard();
 void load_scoreboard();
 int check_duplicate(string move);
 int data();
-bool black_turn,computer=false,save;
+void game_timer();
+bool black_turn,computer=false,save,running=true;
+int seconds,minutes;
 
 struct row {
     string winner_name;
@@ -51,6 +55,7 @@ int main()
         c = _getch();
         if(c == '0')
         {
+            system("cls");
             start_game();
             system("cls");
             start_screen();
@@ -58,7 +63,10 @@ int main()
         else if(c == '1')
         {
             if(data())
+            {
+                system("cls");
                 load_game();
+            }
 
             system("cls");
             start_screen();
@@ -130,16 +138,17 @@ void start_screen()
         if (i == 0)
             cout << "\u250C\u2500\u2500\u2500\u2500\u2500\u2500Score Board\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n";
         else if(i == winners.size()+1)
-            cout << "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n";
+            cout << "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n";
         else
         {
-            cout << "\u2502    "<< winners[i-1].winner_name << " " << winners[i-1].win_count << "    \u2502\n";
+            cout << "       "<< winners[i-1].winner_name << " \u2502 " << winners[i-1].win_count << "\n";
         }
     }
 }
 
 void start_game()
 {
+    thread t(game_timer);
     // fill the positions array with empty position and the starting 4 pieces
     for(int i = 0;i < 8;i++)
         for(int j = 0;j < 8;j++)
@@ -156,10 +165,12 @@ void start_game()
     update_board();
     valid_plays("");
     play_turn();
+    t.join();
 }
 
 void update_board()
 {
+    cout << "\n\n";
     int x=0,y=0,skip=0,column=97,row=1;
     for(int i = 0;i < 10;i++)
     {
@@ -652,7 +663,7 @@ void play_turn()
             black_turn = true;
         }
         if(save)
-            save_game();
+            save_game(1);
         update_board();
 
         if(black_out && white_out)
@@ -693,6 +704,8 @@ void result()
         if(winner == winners[i].winner_name)
         {
             winners[i].win_count++;
+            save_game(0);
+            save_scoreboard();
             return ;
         }
     }
@@ -701,6 +714,7 @@ void result()
     winner_data.win_count = 1;
     winners.push_back(winner_data);
 
+    save_game(0);
     save_scoreboard();
 }
 
@@ -723,16 +737,21 @@ void show_valid_moves()
     cout << "\n";
 }
 
-void save_game()
+void save_game(int mode)
 {
     ofstream out("save.txt");
     
-    for(int i = 0;i < 8;i++)
-        for(int j = 0;j < 8;j++)
-            out << positions[i][j] << '\n';
+    if(mode)
+    {
+        for(int i = 0;i < 8;i++)
+            for(int j = 0;j < 8;j++)
+                out << positions[i][j] << '\n';
 
-    out << black_turn << '\n';
-    out << computer << '\n';
+        out << black_turn << '\n';
+        out << computer << '\n';
+        out << seconds << '\n';
+        out << minutes << '\n';
+    }
 }
 
 void load_game()
@@ -745,11 +764,15 @@ void load_game()
 
     in >> black_turn;
     in >> computer;
+    in >> seconds;
+    in >> minutes;
 
     save = true;
 
+    thread t(game_timer);
     update_board();
     play_turn();
+    t.join();
 }
 
 int data()
@@ -780,11 +803,15 @@ void load_scoreboard()
 
     int size;
     in >> size;
-    for(int i = 0;i < winners.size();i++)
+
+    row winner_data;
+    for(int i = 0;i < size;i++)
     {
-        getline(in,winners[i].winner_name);
-        in >> winners[i].win_count;
+        in >> winner_data.winner_name;
+        in >> winner_data.win_count;
+        winners.push_back(winner_data);
     }
+
 }
 
 int check_duplicate(string move)
@@ -795,4 +822,31 @@ int check_duplicate(string move)
             return 1;
     }
     return 0;
+}
+
+void game_timer()
+{
+    while(running)
+    {
+        this_thread::sleep_for(chrono::seconds(1));
+        if(seconds != 59)
+            seconds++;
+        else
+        {
+            minutes++;
+            seconds = 0;
+        }
+
+        cout << "\033[s";
+        cout << "\033[?25l";
+        cout << "\033[2;30H";
+        if(seconds >= 10)
+            cout << minutes << " : " << seconds;
+        else
+            cout << minutes << " : 0"<< seconds;
+        cout << "\033[u";
+        cout << "\033[?25h";
+
+        save_game(1);
+    }
 }
