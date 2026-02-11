@@ -22,7 +22,7 @@ void save_game(int mode);
 void load_game();
 void save_scoreboard();
 void load_scoreboard();
-int data();
+int data(int index);
 void game_timer();
 bool black_turn,computer=false,save,running=true;
 int seconds,minutes,color_index=0;
@@ -56,7 +56,8 @@ int main()
     // sets console's output encoding to UTF8 so the unicode chars encode correctly.
     SetConsoleOutputCP(CP_UTF8);
 
-    load_scoreboard();
+    if(data(2))
+        load_scoreboard();
     start_screen();
 
     while(true)
@@ -72,7 +73,7 @@ int main()
         }
         else if(c == '1')
         {
-            if(data())
+            if(data(1))
             {
                 system("cls");
                 load_game();
@@ -140,7 +141,7 @@ void start_screen()
     cout << "Mode: " << mode << "\n";
     cout << "Save Game: " << save_game << "\n";
 
-    if(data())
+    if(data(1))
         cout << "A previously saved game can be loaded!\n";
     else
         cout << "There isn't any saved game to load!\n";
@@ -842,15 +843,24 @@ void load_game()
     t.join();
 }
 
-// checks if the save.txt file exist and is not empty
-int data()
+// checks if save.txt or score.txt files exist and are not empty
+int data(int index)
 {
-    ifstream in("save.txt");
+    if(index == 1)
+    {
+        ifstream in("save.txt");
 
-    if(in.good() && in.peek() != ifstream::traits_type::eof())
-        return 1;
-    else
-        return 0;
+        if(in.good() && in.peek() != ifstream::traits_type::eof())
+            return 1;
+    }
+    else if(index == 2)
+    {
+        ifstream in("score.txt");
+
+        if(in.good() && in.peek() != ifstream::traits_type::eof())
+            return 1;
+    }
+    return 0;
 }
 
 // Saving winners to score.txt save file
@@ -900,7 +910,7 @@ void game_timer()
 
         cout << "\033[s";
         cout << "\033[?25l";
-        cout << "\033[2;30H";
+        cout << "\033[2;31H";
         if(seconds >= 10)
             cout << "\033[34m" << minutes << " : " << seconds << "\033[0m";
         else
