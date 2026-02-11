@@ -130,11 +130,11 @@ void start_screen()
             cout << "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n";
         else
         {
-            cout << "\u2502     [0]: PLAY     \u2502\n";
-            cout << "\u2502  [1]: Load Game   \u2502\n";
-            cout << "\u2502  [2]: Change Mode \u2502\n";
-            cout << "\u2502  [3]: Save Game   \u2502\n";
-            cout << "\u2502     [4]: EXIT     \u2502\n";
+            cout << "\033[33m\u2502     [0]: PLAY     \u2502\n\033[0m";
+            cout << "\033[34m\u2502  [1]: Load Game   \u2502\n\033[0m";
+            cout << "\033[35m\u2502  [2]: Change Mode \u2502\n\033[0m";
+            cout << "\033[32m\u2502  [3]: Save Game   \u2502\n\033[0m";
+            cout << "\033[31m\u2502     [4]: EXIT     \u2502\n\033[0m";
         }
     }
 
@@ -157,6 +157,8 @@ void start_screen()
             cout << "       "<< winners[i-1].winner_name << " \u2502 " << winners[i-1].win_count << "\n";
         }
     }
+
+    cout << "\033[31m" << "For the best experience please make your terminal Fullscreen!!!\n\033[0m";
 }
 
 /* This function is called once at the start of the game and fills the positions array with default pieces
