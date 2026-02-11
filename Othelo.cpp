@@ -27,7 +27,7 @@ int check_duplicate(string move);
 int data();
 void game_timer();
 bool black_turn,computer=false,save,running=true;
-int seconds,minutes;
+int seconds,minutes,color_index=0;
 
 struct row {
     string winner_name;
@@ -36,6 +36,7 @@ struct row {
 
 vector<string> valid_moves;
 vector<row> winners;
+string colors[5] = {"\033[31m","\033[32m","\033[34m","\033[35m","\033[36m"};
 
 // a 2D Array containing the status of the board's blocks  
 string positions[8][8];
@@ -162,8 +163,8 @@ void start_game()
         }
 
     black_turn = true;
-    update_board();
     valid_plays("");
+    update_board();
     play_turn();
     t.join();
 }
@@ -171,7 +172,8 @@ void start_game()
 void update_board()
 {
     cout << "\n\n";
-    int x=0,y=0,skip=0,column=97,row=1;
+    color_index = 0;
+    int x=0,y=0,skip=0,column=97,row=1,valid_m=0;
     for(int i = 0;i < 10;i++)
     {
         for(int j = 0;j < 64;j++)
@@ -181,43 +183,43 @@ void update_board()
             else if(i == 1)
             {
                 if(j == 0)
-                    cout << "\u250C";
+                    cout << "\033[33m" << "\u250C" << "\033[0m";
                 else if(j == 63)
-                    cout << "\u2510";
+                    cout << "\033[33m" << "\u2510" << "\033[0m";
                 else
                 {
                     if(j % 8 == 0)
-                        cout << "\u252C";
+                        cout << "\033[33m" << "\u252C" << "\033[0m";
                     else
-                        cout << "\u2500";
+                        cout << "\033[33m" << "\u2500" << "\033[0m";
                 }
             }
             else if(i == 9)
             {
                 if(j == 0)
-                    cout << "\u2514";
+                    cout << "\033[33m" << "\u2514" << "\033[0m";
                 else if(j == 63)
-                    cout << "\u2518";
+                    cout << "\033[33m" << "\u2518" << "\033[0m";
                 else
                 {
                     if(j % 8 == 0)
-                        cout << "\u2534";
+                        cout << "\033[33m" << "\u2534" << "\033[0m";
                     else
-                        cout << "\u2500";
+                        cout << "\033[33m" << "\u2500" << "\033[0m";
                 }
             }
             else
             {
                 if(j == 0)
-                    cout << "\u251C";
+                    cout << "\033[33m" << "\u251C" << "\033[0m";
                 else if(j == 63)
-                    cout << "\u2524";
+                    cout << "\033[33m" << "\u2524" << "\033[0m";
                 else
                 {
                     if(j % 8 == 0)
-                        cout << "\u253C";
+                        cout << "\033[33m" << "\u253C" << "\033[0m";
                     else
-                        cout << "\u2500";
+                        cout << "\033[33m" << "\u2500" << "\033[0m";
                 }
             }
         }
@@ -241,25 +243,43 @@ void update_board()
                 else
                 {
                     if(j == 0)
-                        cout << "\u2502";
+                        cout << "\033[33m" << "\u2502" << "\033[0m";
                     else if(j == 63)
-                        cout << "\u2502";
+                        cout << "\033[33m" << "\u2502" << "\033[0m";
                     else
                     {
                         if(j % 8 == 0)
-                            cout << "\u2502";
+                            cout << "\033[33m" << "\u2502" << "\033[0m";
                         else
                         {
                             if(j % 4 == 0)
                             {
-                                if(positions[x][y] != " ")
-                                    skip = 1;
-                                cout << positions[x][y++];
+                                if(color_index > 4)
+                                    color_index = 0;
+                                for(int k = 0;k < valid_moves.size();k++)
+                                {
+                                    if(x == char(valid_moves[k][1]-'0')-1 && y == char(valid_moves[k][0]) - 97)
+                                    {
+                                        y++;
+                                        cout << colors[color_index++] << valid_moves[k] << "\033[0m";
+                                        valid_m = 1;
+                                        skip = 1;
+                                    }
+                                }
+
+                                if(!valid_m)
+                                {
+                                    if(positions[x][y] != " ")
+                                        skip = 1;
+                                
+                                    cout << positions[x][y++];
+                                }
                             }
                             else if(skip)
                             {
                                 cout << "";
                                 skip = 0;
+                                valid_m = 0;
                             }
                             else
                             {
@@ -581,6 +601,7 @@ void play_turn()
     {
         valid = false;
         valid_plays("");
+        update_board();
         show_valid_moves();
         string move;
         if(black_turn && !black_out)
@@ -726,10 +747,13 @@ int randomInt(int N) {
 
 void show_valid_moves()
 {
+    color_index = 0;
     cout << "Valid Moves: ";
     for(int i = 0;i < valid_moves.size();i++)
     {
-        cout << valid_moves[i];
+        if(color_index > 4)
+            color_index = 0;
+        cout << colors[color_index++] << valid_moves[i] << "\33[0m";
         if(i == valid_moves.size()-1)
             break;
         cout << " -- ";
@@ -770,7 +794,6 @@ void load_game()
     save = true;
 
     thread t(game_timer);
-    update_board();
     play_turn();
     t.join();
 }
@@ -841,9 +864,9 @@ void game_timer()
         cout << "\033[?25l";
         cout << "\033[2;30H";
         if(seconds >= 10)
-            cout << minutes << " : " << seconds;
+            cout << "\033[34m" << minutes << " : " << seconds << "\033[0m";
         else
-            cout << minutes << " : 0"<< seconds;
+            cout << "\033[34m" << minutes << " : 0"<< seconds << "\033[0m";
         cout << "\033[u";
         cout << "\033[?25h";
 
