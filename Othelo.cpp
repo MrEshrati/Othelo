@@ -24,7 +24,7 @@ void save_scoreboard();
 void load_scoreboard();
 int data(int index);
 void game_timer();
-bool black_turn,computer=false,save,running=true;
+bool black_turn,computer=false,save,running=true,sleep=false;
 int seconds,minutes,color_index=0;
 
 // a struct for the scoreboard array(winners) including the winner's name and the number of times that player won
@@ -189,6 +189,7 @@ void start_game()
         the pieces on the correct positions */
 void update_board()
 {
+    sleep = true;
     cout << "\n\n";
     int x=0,y=0,skip=0,column=97,row=1,valid_m=0;
     for(int i = 0;i < 10;i++)
@@ -908,9 +909,16 @@ void game_timer()
             seconds = 0;
         }
 
+        if(sleep)
+        {
+            this_thread::sleep_for(chrono::seconds(1));
+            seconds++;
+            sleep = false;
+        }
+
         cout << "\033[s";
         cout << "\033[?25l";
-        cout << "\033[2;31H";
+        cout << "\033[1;31H";
         if(seconds >= 10)
             cout << "\033[34m" << minutes << " : " << seconds << "\033[0m";
         else
@@ -918,5 +926,6 @@ void game_timer()
         cout << "\033[u";
         cout << "\033[?25h";
 
+        save_game(1);
     }
 }
