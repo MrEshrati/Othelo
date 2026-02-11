@@ -18,24 +18,32 @@ void valid_plays(string move);
 void turn_pieces(string start,string end,string type,string turn);
 void result();
 int randomInt(int N);
-void show_valid_moves();
 void save_game(int mode);
 void load_game();
 void save_scoreboard();
 void load_scoreboard();
-int check_duplicate(string move);
 int data();
 void game_timer();
 bool black_turn,computer=false,save,running=true;
 int seconds,minutes,color_index=0;
 
+// a struct for the scoreboard array(winners) including the winner's name and the number of times that player won
 struct row {
     string winner_name;
     int win_count;
 };
 
-vector<string> valid_moves;
+// a struct for the valid_moves array including the valid move_name and the color assigned to that valid move
+struct valid_move {
+    string move_name;
+    string move_color;
+};
+
+// a vector containing all of the valid moves for the piece that it is it's turn to play
+vector<valid_move> valid_moves;
+// a vector containing all of the winners and the win count of each of them
 vector<row> winners;
+// a vector containing the ANSI color values to change cout color of the terminal
 string colors[5] = {"\033[31m","\033[32m","\033[34m","\033[35m","\033[36m"};
 
 // a 2D Array containing the status of the board's blocks  
@@ -53,6 +61,7 @@ int main()
 
     while(true)
     {
+        // Waits for the player to press one of the valid keys and it will be executed
         c = _getch();
         if(c == '0')
         {
@@ -99,6 +108,8 @@ int main()
     return 0;
 }
 
+/* This function creates the start section of the game indicating the options and modes and how to start the game
+        and it will also create the scoreboard */
 void start_screen()
 {
     string mode,save_game;
@@ -147,8 +158,13 @@ void start_screen()
     }
 }
 
+/* This function is called once at the start of the game and fills the positions array with default pieces
+        and it will also create the thread for the game_timer */
 void start_game()
 {
+    running = true;
+    seconds = 0;
+    minutes = 0;
     thread t(game_timer);
     // fill the positions array with empty position and the starting 4 pieces
     for(int i = 0;i < 8;i++)
@@ -164,15 +180,15 @@ void start_game()
 
     black_turn = true;
     valid_plays("");
-    update_board();
     play_turn();
     t.join();
 }
 
+/* This function will update the game board each time it is called and fill the game board with valid moves and places
+        the pieces on the correct positions */
 void update_board()
 {
     cout << "\n\n";
-    color_index = 0;
     int x=0,y=0,skip=0,column=97,row=1,valid_m=0;
     for(int i = 0;i < 10;i++)
     {
@@ -227,11 +243,11 @@ void update_board()
         
         if(i != 9)
         {
-            for(int j = 0;j < 64;j++)
+            for(int t = 0;t < 64;t++)
             {
                 if(i == 0)
                 {
-                    if(j % 4 == 0 && j % 8 != 0)
+                    if(t % 4 == 0 && t % 8 != 0)
                     {
                         cout << char(column++);
                     }
@@ -242,28 +258,27 @@ void update_board()
                 }
                 else
                 {
-                    if(j == 0)
+                    if(t == 0)
                         cout << "\033[33m" << "\u2502" << "\033[0m";
-                    else if(j == 63)
+                    else if(t == 63)
                         cout << "\033[33m" << "\u2502" << "\033[0m";
                     else
                     {
-                        if(j % 8 == 0)
+                        if(t % 8 == 0)
                             cout << "\033[33m" << "\u2502" << "\033[0m";
                         else
                         {
-                            if(j % 4 == 0)
+                            if(t % 4 == 0)
                             {
-                                if(color_index > 4)
-                                    color_index = 0;
                                 for(int k = 0;k < valid_moves.size();k++)
                                 {
-                                    if(x == char(valid_moves[k][1]-'0')-1 && y == char(valid_moves[k][0]) - 97)
+                                    if(x == char(valid_moves[k].move_name[1]-'0')-1 && y == char(valid_moves[k].move_name[0]) - 97)
                                     {
                                         y++;
-                                        cout << colors[color_index++] << valid_moves[k] << "\033[0m";
+                                        cout << valid_moves[k].move_color << valid_moves[k].move_name << "\033[0m";
                                         valid_m = 1;
                                         skip = 1;
+                                        break;
                                     }
                                 }
 
@@ -277,6 +292,7 @@ void update_board()
                             }
                             else if(skip)
                             {
+                                int count = 0;
                                 cout << "";
                                 skip = 0;
                                 valid_m = 0;
@@ -298,13 +314,19 @@ void update_board()
             y=0;
         }
     }
+    cout << "Valid Moves: Shown on Board\n";
 }
 
+/* This function does 2 things,if the move is empty it will only fill up the valid_moves array 
+    but if the move containes the player's move not only it will fill up the valid_moves,it will also
+        check if the move is valid and if it is valid it will call the turn_pieces function to turn the surronded pieces */
 void valid_plays(string move)
 {
     valid_moves.clear();
+    color_index = 0;
     int count;
     string turn,outturn;
+    valid_move temp_valid;
      
     if(black_turn)
     {
@@ -332,8 +354,13 @@ void valid_plays(string move)
                         {
                             if(positions[i][j-count] == " ")
                             {
-                                if(!check_duplicate(move))
-                                    valid_moves.push_back(string(1, char('a' + j - count)) + to_string(i+1));
+
+                                if(color_index > 4)
+                                    color_index = 0;
+                                temp_valid.move_name = string(1, char('a' + j - count)) + to_string(i+1);
+                                temp_valid.move_color = colors[color_index++];
+                                valid_moves.push_back(temp_valid);
+                                
                                 if(move != "" && string(1, char('a' + j - count)) + to_string(i+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i)+to_string(j-count),"left",turn);
@@ -358,8 +385,12 @@ void valid_plays(string move)
                         {
                             if(positions[i][j+count] == " ")
                             {
-                                if(!check_duplicate(move))
-                                    valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+1));
+
+                                if(color_index > 4)
+                                    color_index = 0;
+                                temp_valid.move_name = string(1,char('a' + j + count)) + to_string(i+1);
+                                temp_valid.move_color = colors[color_index++];
+                                valid_moves.push_back(temp_valid);
                                 if(move != "" && string(1,char('a' + j + count)) + to_string(i+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i)+to_string(j+count),"right",turn);
@@ -384,8 +415,12 @@ void valid_plays(string move)
                         {
                             if(positions[i-count][j] == " ")
                             {
-                                if(!check_duplicate(move))
-                                    valid_moves.push_back(string(1,char('a' + j)) + to_string(i-count+1));
+
+                                if(color_index > 4)
+                                    color_index = 0;
+                                temp_valid.move_name = string(1,char('a' + j)) + to_string(i-count+1);
+                                temp_valid.move_color = colors[color_index++];
+                                valid_moves.push_back(temp_valid);
                                 if(move != "" && string(1,char('a' + j)) + to_string(i-count+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j),"up",turn);
@@ -412,8 +447,12 @@ void valid_plays(string move)
                             {
                                 if(positions[i+count][j] == " ")
                                 {
-                                    if(!check_duplicate(move))
-                                        valid_moves.push_back(string(1,char('a' + j)) + to_string(i+count+1));
+
+                                    if(color_index > 4)
+                                        color_index = 0;
+                                    temp_valid.move_name = string(1,char('a' + j)) + to_string(i+count+1);
+                                    temp_valid.move_color = colors[color_index++];
+                                    valid_moves.push_back(temp_valid);
                                     if(move != "" && string(1,char('a' + j)) + to_string(i+count+1) == move)
                                     {
                                         turn_pieces(to_string(i)+to_string(j),to_string(i+count)+to_string(j),"down",turn);
@@ -439,9 +478,13 @@ void valid_plays(string move)
                         {
                             if(positions[i-count][j+count] == " ")
                             {
-                                if(!check_duplicate(move))
-                                    valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i-count+1));
-                                if(move != "" && string(1,char('a' + j + count)) + to_string(i-count+1) == move)
+
+                                if(color_index > 4)
+                                    color_index = 0;
+                                temp_valid.move_name = string(1,char('a' + j + count)) + to_string(i-count+1);
+                                temp_valid.move_color = colors[color_index++];
+                                valid_moves.push_back(temp_valid);
+                                    if(move != "" && string(1,char('a' + j + count)) + to_string(i-count+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j+count),"diamup_right",turn);
                                 }
@@ -464,8 +507,11 @@ void valid_plays(string move)
                         {
                             if(positions[i-count][j-count] == " ")
                             {
-                                if(!check_duplicate(move))
-                                    valid_moves.push_back(string(1,char('a' + j - count)) + to_string(i-count+1));
+                                if(color_index > 4)
+                                    color_index = 0;
+                                temp_valid.move_name = string(1,char('a' + j - count)) + to_string(i-count+1);
+                                temp_valid.move_color = colors[color_index++];
+                                valid_moves.push_back(temp_valid);
                                 if(move != "" && string(1,char('a' + j - count)) + to_string(i-count+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i-count)+to_string(j-count),"diamup_left",turn);
@@ -489,8 +535,12 @@ void valid_plays(string move)
                         {
                             if(positions[i+count][j+count] == " ")
                             {
-                                if(!check_duplicate(move))
-                                    valid_moves.push_back(string(1,char('a' + j + count)) + to_string(i+count+1));
+
+                                if(color_index > 4)
+                                    color_index = 0;
+                                temp_valid.move_name = string(1,char('a' + j + count)) + to_string(i+count+1);
+                                temp_valid.move_color = colors[color_index++];
+                                valid_moves.push_back(temp_valid);
                                 if(move != "" && string(1,char('a' + j + count)) + to_string(i+count+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i+count)+to_string(j+count),"diamdown_right",turn);
@@ -514,8 +564,11 @@ void valid_plays(string move)
                         {
                             if(positions[i+count][j-count] == " ")
                             {
-                                if(!check_duplicate(move))
-                                    valid_moves.push_back(string(1,char('a' + j - count)) + to_string(i+count+1));
+                                if(color_index > 4)
+                                    color_index = 0;
+                                temp_valid.move_name = string(1,char('a' + j - count)) + to_string(i+count+1);
+                                temp_valid.move_color = colors[color_index++];
+                                valid_moves.push_back(temp_valid);
                                 if(move != "" && string(1,char('a' + j - count)) + to_string(i+count+1) == move)
                                 {
                                     turn_pieces(to_string(i)+to_string(j),to_string(i+count)+to_string(j-count),"diamdown_left",turn);
@@ -534,6 +587,7 @@ void valid_plays(string move)
         }
 }
 
+// Every time the player moves and it is a valid move, this function will be called to turn the color of the surounded pieces 
 void turn_pieces(string start,string end,string type,string turn)
 {
     if(type == "up")
@@ -594,6 +648,7 @@ void turn_pieces(string start,string end,string type,string turn)
     }
 }
 
+// This function will be called after the game starts and the loop inside it will continue the turns between two players until the game is over
 void play_turn()
 {
     bool GameOver=false,valid,black_out=false,white_out=false;
@@ -602,7 +657,6 @@ void play_turn()
         valid = false;
         valid_plays("");
         update_board();
-        show_valid_moves();
         string move;
         if(black_turn && !black_out)
         {
@@ -614,7 +668,7 @@ void play_turn()
                     cin >> move;
                     for(int i = 0;i < valid_moves.size();i++)
                     {
-                        if(move == valid_moves[i])
+                        if(move == valid_moves[i].move_name)
                         {
                             valid = true;
                             valid_plays(move);
@@ -640,7 +694,7 @@ void play_turn()
                 cout << "Computer moves: ";
                 if(valid_moves.size() != 0)
                 {
-                    move = valid_moves[randomInt(valid_moves.size())];
+                    move = valid_moves[randomInt(valid_moves.size())].move_name;
                     valid_plays(move);
                     positions[char(move[1]-'0')-1][char(move[0]) - 97] = "\u26AA";
                     cout << move;
@@ -661,7 +715,7 @@ void play_turn()
                         cin >> move;
                         for(int i = 0;i < valid_moves.size();i++)
                         {
-                            if(move == valid_moves[i])
+                            if(move == valid_moves[i].move_name)
                             {
                                 valid = true;
                                 valid_plays(move);
@@ -685,15 +739,18 @@ void play_turn()
         }
         if(save)
             save_game(1);
-        update_board();
 
         if(black_out && white_out)
+        {
             GameOver = true;
+            running = false;
+        }
     }
 
     result();
 }
 
+// After the game is over this function will count the pieces to determine the winner and then submit the winner's name in the scoreboard
 void result()
 {
     int white = 0,black = 0;
@@ -739,28 +796,14 @@ void result()
     save_scoreboard();
 }
 
+// Generates a random number to use as the valid_playes index for the computer to play
 int randomInt(int N) {
     static mt19937 gen(random_device{}());
     uniform_int_distribution<int> dist(0, N-1);
     return dist(gen);
 }
 
-void show_valid_moves()
-{
-    color_index = 0;
-    cout << "Valid Moves: ";
-    for(int i = 0;i < valid_moves.size();i++)
-    {
-        if(color_index > 4)
-            color_index = 0;
-        cout << colors[color_index++] << valid_moves[i] << "\33[0m";
-        if(i == valid_moves.size()-1)
-            break;
-        cout << " -- ";
-    }
-    cout << "\n";
-}
-
+// Saves the game into save.txt file which then can be loaded to continue the game from the save file
 void save_game(int mode)
 {
     ofstream out("save.txt");
@@ -778,6 +821,7 @@ void save_game(int mode)
     }
 }
 
+// Loads the game's previous save data to continue playing from where you left off
 void load_game()
 {
     ifstream in("save.txt");
@@ -798,6 +842,7 @@ void load_game()
     t.join();
 }
 
+// checks if the save.txt file exist and is not empty
 int data()
 {
     ifstream in("save.txt");
@@ -808,6 +853,7 @@ int data()
         return 0;
 }
 
+// Saving winners to score.txt save file
 void save_scoreboard()
 {
     ofstream out("score.txt");
@@ -820,6 +866,7 @@ void save_scoreboard()
     }
 }
 
+// Loading saved winners from recent score.txt save file
 void load_scoreboard()
 {
     ifstream in("score.txt");
@@ -837,16 +884,7 @@ void load_scoreboard()
 
 }
 
-int check_duplicate(string move)
-{
-    for(int i = 0;i < valid_moves.size();i++)
-    {
-        if(move == valid_moves[i])
-            return 1;
-    }
-    return 0;
-}
-
+// Game Timer that runs on another thread which makes the program responsive even when the timer loop runs
 void game_timer()
 {
     while(running)
@@ -870,6 +908,5 @@ void game_timer()
         cout << "\033[u";
         cout << "\033[?25h";
 
-        save_game(1);
     }
 }
